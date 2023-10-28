@@ -90,12 +90,12 @@ impl Session {
 }
 
 impl Session {
-    pub(crate) fn handle_rx<C: CryptoFactory + Default, const N: usize>(
+    pub(crate) fn handle_rx<C: CryptoFactory + Default, const N: usize, const D: usize>(
         &mut self,
         region: &mut region::Configuration,
         configuration: &mut super::Configuration,
         rx: &mut RadioBuffer<N>,
-        dl: &mut Option<Downlink>,
+        dl: &mut Vec<Downlink, D>,
     ) -> Response {
         if let Ok(PhyPayload::Data(DataPayload::Encrypted(encrypted_data))) =
             lorawan_parse(rx.as_mut_for_read(), C::default())
@@ -143,7 +143,8 @@ impl Session {
                             // heapless Vec from slice fails only if slice is too large.
                             // A data FRM payload will never exceed 256 bytes.
                             let data = Vec::from_slice(data).unwrap();
-                            *dl = Some(Downlink { data, fport });
+                            // TODO: propagate error type when heapless vec is full?
+                            let _ = dl.push(Downlink { data, fport });
                         }
                         Response::DownlinkReceived(fcnt)
                     };

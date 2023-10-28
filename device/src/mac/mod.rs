@@ -2,6 +2,7 @@ use crate::{
     radio::{self, RadioBuffer},
     region, AppSKey, Downlink, NewSKey,
 };
+use heapless::Vec;
 use lorawan::parser::DevAddr;
 use lorawan::{self, keys::CryptoFactory, maccommands::MacCommand};
 
@@ -186,14 +187,14 @@ impl Mac {
     /// verification. Upon successful join, provides Response::JoinSuccess. Upon successful data
     /// rx, provides Response::DownlinkReceived. User must take the radio buffer to parse the
     /// application payload.
-    pub(crate) fn handle_rx<C: CryptoFactory + Default, const N: usize>(
+    pub(crate) fn handle_rx<C: CryptoFactory + Default, const N: usize, const D: usize>(
         &mut self,
         buf: &mut RadioBuffer<N>,
-        dl: &mut Option<Downlink>,
+        dl: &mut Vec<Downlink, D>,
     ) -> Response {
         match &mut self.state {
             State::Joined(ref mut session) => {
-                session.handle_rx::<C, N>(&mut self.region, &mut self.configuration, buf, dl)
+                session.handle_rx::<C, N, D>(&mut self.region, &mut self.configuration, buf, dl)
             }
             State::Otaa(ref mut otaa) => {
                 if let Some(session) =
