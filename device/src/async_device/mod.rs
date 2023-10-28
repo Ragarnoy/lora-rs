@@ -239,6 +239,10 @@ where
     /// The returned future completes when the data have been sent successfully and downlink data,
     /// if any, is available by calling take_downlink. Response::DownlinkReceived indicates a
     /// downlink is available.
+    ///
+    /// In Class C mode, it is possible to get one or more downlinks and `Reponse::DownlinkReceived`
+    /// maybe not even be indicated. It is recommended to call `take_downlink` after `send` until
+    /// it ruturns `None`.
     pub async fn send(
         &mut self,
         data: &[u8],
@@ -497,6 +501,24 @@ where
             },
             // Timeout! Prepare for the next window.
             Either::Right(_) => RxWindowResponse::Timeout(window_duration),
+        }
+    }
+
+    /// When not involved in sending and RX1/RX2 windows, a class C configured device will be
+    /// listening to RXC frames. The caller is expected to be awaiting this message at all times.
+    pub async fn rxc_listen(&mut self) -> Result<mac::Response, R::PhyError> {
+        loop {
+            let (sz, _rx_quality) = self.radio.rx(self.radio_buffer.as_mut()).await?;
+            self.radio_buffer.set_pos(sz);
+            match self.mac.handle_rx::<C, N, D>(&mut self.radio_buffer, &mut self.downlink) {
+                mac::Response::NoUpdate => {
+                    self.radio_buffer.clear();
+                }
+                r => {
+                    self.radio_buffer.clear();
+                    return Ok(r);
+                }
+            }
         }
     }
 }
