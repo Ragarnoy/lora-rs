@@ -336,7 +336,7 @@ where
                         self.radio_buffer.set_pos(sz);
                         match self
                             .mac
-                            .handle_rx::<C, N, D>(&mut self.radio_buffer, &mut self.downlink)
+                            .handle_rxc::<C, N, D>(&mut self.radio_buffer, &mut self.downlink)?
                         {
                             mac::Response::NoUpdate => {
                                 self.radio_buffer.clear();
@@ -532,11 +532,12 @@ where
 
     /// When not involved in sending and RX1/RX2 windows, a class C configured device will be
     /// listening to RXC frames. The caller is expected to be awaiting this message at all times.
-    pub async fn rxc_listen(&mut self) -> Result<mac::Response, R::PhyError> {
+    pub async fn rxc_listen(&mut self) -> Result<mac::Response, Error<R::PhyError>> {
         loop {
-            let (sz, _rx_quality) = self.radio.rx(self.radio_buffer.as_mut()).await?;
+            let (sz, _rx_quality) =
+                self.radio.rx(self.radio_buffer.as_mut()).await.map_err(Error::Radio)?;
             self.radio_buffer.set_pos(sz);
-            match self.mac.handle_rx::<C, N, D>(&mut self.radio_buffer, &mut self.downlink) {
+            match self.mac.handle_rxc::<C, N, D>(&mut self.radio_buffer, &mut self.downlink)? {
                 mac::Response::NoUpdate => {
                     self.radio_buffer.clear();
                 }

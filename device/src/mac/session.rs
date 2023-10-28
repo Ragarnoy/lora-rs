@@ -96,6 +96,7 @@ impl Session {
         configuration: &mut super::Configuration,
         rx: &mut RadioBuffer<N>,
         dl: &mut Vec<Downlink, D>,
+        ignore_mac: bool,
     ) -> Response {
         if let Ok(PhyPayload::Data(DataPayload::Encrypted(encrypted_data))) =
             lorawan_parse(rx.as_mut_for_read(), C::default())
@@ -113,18 +114,20 @@ impl Session {
                         .decrypt(Some(&self.newskey().0), Some(&self.appskey().0), self.fcnt_down)
                         .unwrap();
 
-                    // MAC commands may be in the FHDR or the FRMPayload
-                    configuration.handle_downlink_macs(
-                        region,
-                        &mut self.uplink,
-                        &mut decrypted.fhdr().fopts(),
-                    );
-                    if let Ok(FRMPayload::MACCommands(mac_cmds)) = decrypted.frm_payload() {
+                    if !ignore_mac {
+                        // MAC commands may be in the FHDR or the FRMPayload
                         configuration.handle_downlink_macs(
                             region,
                             &mut self.uplink,
-                            &mut mac_cmds.mac_commands(),
+                            &mut decrypted.fhdr().fopts(),
                         );
+                        if let Ok(FRMPayload::MACCommands(mac_cmds)) = decrypted.frm_payload() {
+                            configuration.handle_downlink_macs(
+                                region,
+                                &mut self.uplink,
+                                &mut mac_cmds.mac_commands(),
+                            );
+                        }
                     }
 
                     if confirmed {

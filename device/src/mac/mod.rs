@@ -185,17 +185,21 @@ impl Mac {
 
     /// Handles a received RF frame. Returns None is unparseable, fails decryption, or fails MIC
     /// verification. Upon successful join, provides Response::JoinSuccess. Upon successful data
-    /// rx, provides Response::DownlinkReceived. User must take the radio buffer to parse the
-    /// application payload.
+    /// rx, provides Response::DownlinkReceived. User must take the downlink from vec for
+    /// application data.
     pub(crate) fn handle_rx<C: CryptoFactory + Default, const N: usize, const D: usize>(
         &mut self,
         buf: &mut RadioBuffer<N>,
         dl: &mut Vec<Downlink, D>,
     ) -> Response {
         match &mut self.state {
-            State::Joined(ref mut session) => {
-                session.handle_rx::<C, N, D>(&mut self.region, &mut self.configuration, buf, dl)
-            }
+            State::Joined(ref mut session) => session.handle_rx::<C, N, D>(
+                &mut self.region,
+                &mut self.configuration,
+                buf,
+                dl,
+                false,
+            ),
             State::Otaa(ref mut otaa) => {
                 if let Some(session) =
                     otaa.handle_rx::<C, N>(&mut self.region, &mut self.configuration, buf)
@@ -207,6 +211,27 @@ impl Mac {
                 }
             }
             State::Unjoined => Response::NoUpdate,
+        }
+    }
+
+    /// Handles a received RF frame during RXC window. Returns None is unparseable, fails decryption,
+    /// or fails MIC verification. Upon successful data rx, provides Response::DownlinkReceived.
+    /// User must take the downlink from vec for application data.
+    pub(crate) fn handle_rxc<C: CryptoFactory + Default, const N: usize, const D: usize>(
+        &mut self,
+        buf: &mut RadioBuffer<N>,
+        dl: &mut Vec<Downlink, D>,
+    ) -> Result<Response> {
+        match &mut self.state {
+            State::Joined(ref mut session) => Ok(session.handle_rx::<C, N, D>(
+                &mut self.region,
+                &mut self.configuration,
+                buf,
+                dl,
+                true,
+            )),
+            State::Otaa(_) => Err(Error::NotJoined),
+            State::Unjoined => Err(Error::NotJoined),
         }
     }
 
