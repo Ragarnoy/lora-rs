@@ -11,7 +11,7 @@ mod test;
 
 type TimestampMs = u32;
 
-pub struct Device<R, C, RNG, const N: usize, const D: usize>
+pub struct Device<R, C, RNG, const N: usize, const D: usize = 4>
 where
     R: PhyRxTx + Timings,
     C: CryptoFactory + Default,
