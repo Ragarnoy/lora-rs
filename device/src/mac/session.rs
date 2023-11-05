@@ -17,7 +17,7 @@ use super::{
     uplink, FcntUp, Response, SendData,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Session {
@@ -30,6 +30,7 @@ pub struct Session {
     pub fcnt_down: u32,
 }
 
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SessionKeys {
     pub newskey: NewSKey,

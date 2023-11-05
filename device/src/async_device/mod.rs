@@ -171,8 +171,11 @@ where
         }
     }
 
-    pub fn enable_class_c(&mut self) {
+    pub async fn enable_class_c(&mut self) -> Result<(), Error<R::PhyError>> {
+        let rf_config = self.mac.region.get_rxc_config(self.mac.configuration.data_rate);
+        self.radio.setup_rx(rf_config).await.map_err(Error::Radio)?;
         self.class_c = true;
+        Ok(())
     }
 
     pub fn disable_class_c(&mut self) {
@@ -229,7 +232,6 @@ where
 
                 // Receive join response within RX window
                 self.timer.reset();
-
                 let rx_response = self.rx_with_timeout(&Frame::Join, ms).await?.try_into();
                 if self.class_c {
                     if let Ok(JoinResponse::JoinSuccess) = rx_response {
@@ -268,7 +270,7 @@ where
     ///
     /// In Class C mode, it is possible to get one or more downlinks and `Reponse::DownlinkReceived`
     /// maybe not even be indicated. It is recommended to call `take_downlink` after `send` until
-    /// it ruturns `None`.
+    /// it returns `None`.
     pub async fn send(
         &mut self,
         data: &[u8],

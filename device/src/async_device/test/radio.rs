@@ -51,7 +51,7 @@ impl PhyRxTx for TestRadio {
         let msg = self.rx.recv().await.unwrap();
         match msg {
             Msg::RxTx(handler) => {
-                let mut last_uplink = self.last_uplink.lock().await;
+                let last_uplink = self.last_uplink.lock().await;
                 // a quick yield to let timer arm
                 time::sleep(time::Duration::from_millis(5)).await;
                 if let Some(config) = &self.current_config {
@@ -76,16 +76,13 @@ impl Timings for TestRadio {
 
 /// A channel for the test fixture to trigger fires and to check calls.
 pub struct RadioChannel {
-    #[allow(unused)]
     last_uplink: Arc<Mutex<Option<Uplink>>>,
     tx: mpsc::Sender<Msg>,
 }
 
 impl RadioChannel {
-    pub fn handle_rxtx(&self, handler: RxTxHandler) {
-        let tx = self.tx.clone();
-        tokio::spawn(async move {
-            tx.send(Msg::RxTx(handler)).await.unwrap();
-        });
+    pub async fn handle_rxtx(&self, handler: RxTxHandler) {
+        tokio::time::sleep(time::Duration::from_millis(5)).await;
+        self.tx.send(Msg::RxTx(handler)).await.unwrap();
     }
 }
