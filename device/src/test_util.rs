@@ -160,6 +160,7 @@ pub fn handle_data_uplink_with_link_adr_req(
 }
 
 /// Handle an uplink and respond with two LinkAdrReq on Port 0
+#[cfg(feature = "async")]
 pub fn handle_class_c_uplink_after_join<const I: usize>(
     uplink: Option<Uplink>,
     _config: RfConfig,
@@ -246,6 +247,7 @@ pub fn handle_data_uplink_with_link_adr_ans(
     }
 }
 
+#[cfg(feature = "async")]
 pub fn class_c_downlink(_uplink: Option<Uplink>, _config: RfConfig, rx_buffer: &mut [u8]) -> usize {
     let mut phy =
         lorawan::creator::DataPayloadCreator::with_options(rx_buffer, DefaultFactory).unwrap();

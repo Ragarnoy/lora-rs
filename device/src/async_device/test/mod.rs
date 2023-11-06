@@ -18,7 +18,7 @@ mod util;
 use util::{setup, setup_with_session};
 
 type Device =
-    crate::async_device::Device<TestRadio, DefaultFactory, TestTimer, rand_core::OsRng, 512>;
+    crate::async_device::Device<TestRadio, DefaultFactory, TestTimer, rand_core::OsRng, 512, 4>;
 
 #[tokio::test]
 async fn test_join_rx1() {

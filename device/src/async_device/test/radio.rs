@@ -76,6 +76,7 @@ impl Timings for TestRadio {
 
 /// A channel for the test fixture to trigger fires and to check calls.
 pub struct RadioChannel {
+    #[allow(unused)]
     last_uplink: Arc<Mutex<Option<Uplink>>>,
     tx: mpsc::Sender<Msg>,
 }
