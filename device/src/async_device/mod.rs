@@ -35,7 +35,12 @@ use core::cmp::min;
 /// - C: A CryptoFactory implementation
 /// - RNG: A random number generator implementation. An external RNG may be provided, or you may use a builtin PRNG by
 /// providing a random seed.
-pub struct Device<R, C, T, G, const N: usize = 256, const D: usize = 4>
+///
+/// Note that the const generics N and D are used to configure the size of the radio buffer and the number of downlinks
+/// that may be buffered. The defaults are 256 and 1 respectively which should be fine for Class A devices. **For Class
+/// C operation**, it is recommended to increase D to at least 2, if not 3. This is because during the RX1/RX2 windows
+/// after a Class A transmit, it is possible to receive Class C downlinks (in additional to any RX1/RX2 responses!).
+pub struct Device<R, C, T, G, const N: usize = 256, const D: usize = 1>
 where
     R: radio::PhyRxTx + Timings,
     T: radio::Timer,
