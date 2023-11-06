@@ -195,11 +195,13 @@ where
     pub async fn join(&mut self, join_mode: &JoinMode) -> Result<JoinResponse, Error<R::PhyError>> {
         match join_mode {
             JoinMode::OTAA { deveui, appeui, appkey } => {
-                let (tx_config, _) = self.mac.join_otaa::<C, G, N>(
+                let (mut tx_config, _) = self.mac.join_otaa::<C, G, N>(
                     &mut self.rng,
                     NetworkCredentials::new(*appeui, *deveui, *appkey),
                     &mut self.radio_buffer,
                 );
+
+                tx_config.adjust_power(R::ANTENNA_GAIN, R::MAX_RADIO_POWER);
 
                 // Transmit the join payload
                 let ms = self
@@ -233,11 +235,13 @@ where
         confirmed: bool,
     ) -> Result<SendResponse, Error<R::PhyError>> {
         // Prepare transmission buffer
-        let (tx_config, _fcnt_up) = self.mac.send::<C, G, N>(
+        let (mut tx_config, _fcnt_up) = self.mac.send::<C, G, N>(
             &mut self.rng,
             &mut self.radio_buffer,
             &SendData { data, fport, confirmed },
         )?;
+        tx_config.adjust_power(R::ANTENNA_GAIN, R::MAX_RADIO_POWER);
+
         // Transmit our data packet
         let ms = self
             .radio

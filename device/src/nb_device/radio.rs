@@ -33,6 +33,13 @@ pub trait PhyRxTx {
     type PhyError: fmt::Debug;
     type PhyResponse: fmt::Debug;
 
+    /// The antenna gain and board loss in dBi.
+    const ANTENNA_GAIN: i8 = 0;
+
+    /// The max power the radio can be instructed to transmit at. When preparing an instruction
+    /// for the radio, this max power will be used an upper bound.
+    const MAX_RADIO_POWER: u8;
+
     fn get_mut_radio(&mut self) -> &mut Self;
 
     // we require mutability so we may decrypt in place

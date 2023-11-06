@@ -149,7 +149,8 @@ impl Idle {
         let response = match event {
             // tolerate unexpected timeout
             Event::Join(creds) => {
-                let (tx_config, dev_nonce) = mac.join_otaa::<C, RNG, N>(rng, creds, buf);
+                let (mut tx_config, dev_nonce) = mac.join_otaa::<C, RNG, N>(rng, creds, buf);
+                tx_config.adjust_power(R::ANTENNA_GAIN, R::MAX_RADIO_POWER);
                 IntermediateResponse::RadioTx((Frame::Join, tx_config, dev_nonce as u32))
             }
             Event::TimeoutFired => IntermediateResponse::EarlyReturn(Ok(Response::NoUpdate)),
@@ -157,10 +158,11 @@ impl Idle {
                 IntermediateResponse::EarlyReturn(Err(Error::RadioEventWhileIdle.into()))
             }
             Event::SendDataRequest(send_data) => {
-                let tx_config = mac.send::<C, RNG, N>(rng, buf, &send_data);
-                match tx_config {
+                let result = mac.send::<C, RNG, N>(rng, buf, &send_data);
+                match result {
                     Err(e) => IntermediateResponse::EarlyReturn(Err(e.into())),
-                    Ok((tx_config, fcnt_up)) => {
+                    Ok((mut tx_config, fcnt_up)) => {
+                        tx_config.adjust_power(R::ANTENNA_GAIN, R::MAX_RADIO_POWER);
                         IntermediateResponse::RadioTx((Frame::Data, tx_config, fcnt_up))
                     }
                 }

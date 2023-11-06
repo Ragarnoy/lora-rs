@@ -45,6 +45,9 @@ impl PhyRxTx for TestRadio {
     type PhyError = &'static str;
     type PhyResponse = ();
 
+    const ANTENNA_GAIN: i8 = 0;
+    const MAX_RADIO_POWER: u8 = 26;
+
     fn get_mut_radio(&mut self) -> &mut Self {
         self
     }

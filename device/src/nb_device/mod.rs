@@ -13,7 +13,7 @@ type TimestampMs = u32;
 
 pub struct Device<R, C, RNG, const N: usize>
 where
-    R: radio::PhyRxTx + Timings,
+    R: PhyRxTx + Timings,
     C: CryptoFactory + Default,
     RNG: RngCore,
 {
@@ -108,7 +108,7 @@ where
     }
 }
 
-pub(crate) struct Shared<R: radio::PhyRxTx + Timings, RNG: RngCore, const N: usize> {
+pub(crate) struct Shared<R: PhyRxTx + Timings, RNG: RngCore, const N: usize> {
     pub(crate) radio: R,
     pub(crate) rng: RNG,
     pub(crate) tx_buffer: RadioBuffer<N>,
