@@ -250,8 +250,7 @@ where
                         rprintln!("Received JoinSuccess");
                         loop {
                             rprintln!("Sending Class C uplink after Join");
-                            let data = [1];
-                            let response = self.send(&data, 1, true).await?;
+                            let response = self.send(&[], 1, true).await?;
                             if response.is_downlink_received() {
                                 return Ok(JoinResponse::JoinSuccess);
                             }
