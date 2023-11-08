@@ -29,6 +29,9 @@ rand_core = { version = "0.6", default-features = false }
 serde = { version = "1", default-features = false, features = ["derive"], optional = true }
 seq-macro = "0.3.5"
 lora-phy = { version = ">=2.1.1", optional = true }
+rtt-target = { version = "0.3.1", features = [
+    "cortex-m",
+] } # back-version due to https://github.com/probe-rs/rtt-target/issues/33
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros", "time", "sync"]}

@@ -20,7 +20,7 @@ use crate::{radio::RadioBuffer, rng};
 /// provide the radio through the external lora-phy crate
 pub mod lora_radio;
 pub mod radio;
-
+use rtt_target::rprintln;
 #[cfg(test)]
 mod test;
 
@@ -227,6 +227,7 @@ where
                 );
 
                 tx_config.adjust_power(R::ANTENNA_GAIN, R::MAX_RADIO_POWER);
+                rprintln!("Sending join {:?}", tx_config);
 
                 // Transmit the join payload
                 let ms = self
@@ -246,7 +247,9 @@ where
                         if applicable, and retransmission timers). The Network Server SHALL NOT transmit a downlink before it has received
                         a first uplink frame.
                          */
+                        rprintln!("Received JoinSuccess");
                         loop {
+                            rprintln!("Sending Class C uplink after Join");
                             let response = self.send(&[0u8; 0], 0, true).await?;
                             if response.is_downlink_received() {
                                 return Ok(JoinResponse::JoinSuccess);
@@ -289,6 +292,7 @@ where
             &SendData { data, fport, confirmed },
         )?;
         tx_config.adjust_power(R::ANTENNA_GAIN, R::MAX_RADIO_POWER);
+        rprintln!("Sending data {:?}", tx_config);
 
         // Transmit our data packet
         let ms = self
@@ -326,6 +330,7 @@ where
         if self.class_c {
             let rf_config = self.mac.region.get_rxc_config(self.mac.configuration.data_rate);
             self.radio.setup_rx(rf_config).await.map_err(Error::Radio)?;
+            rprintln!("RXC config: {:?}", rf_config);
             let mut response = None;
             let timeout_fut = self.timer.at(duration.into());
             pin_mut!(timeout_fut);
@@ -396,6 +401,7 @@ where
             // Prepare for RX using correct configuration
             let rx_config =
                 self.mac.region.get_rx_config(self.mac.configuration.data_rate, frame, &Window::_1);
+            rprintln!("RX1 config: {:?}", rx_config);
             // Cap window duration so RX2 can start on time
             let mut window_duration = min(rx1_end_delay, rx2_start_delay);
 
@@ -416,6 +422,7 @@ where
                 .await
                 {
                     RxWindowResponse::Rx(sz, _, timeout_fut) => {
+                        rprintln!("RX1 received {} bytes", sz);
                         self.radio_buffer.set_pos(sz);
                         match self
                             .mac
@@ -460,6 +467,7 @@ where
             // Prepare for RX using correct configuration
             let rx_config =
                 self.mac.region.get_rx_config(self.mac.configuration.data_rate, frame, &Window::_2);
+            rprintln!("RX2 config: {:?}", rx_config);
             let window_duration = self.radio.get_rx_window_duration_ms();
 
             // Pass the full radio buffer slice to RX
@@ -479,6 +487,7 @@ where
                 .await
                 {
                     RxWindowResponse::Rx(sz, _, timeout_fut) => {
+                        rprintln!("RX2 received {} bytes", sz);
                         self.radio_buffer.set_pos(sz);
                         match self
                             .mac

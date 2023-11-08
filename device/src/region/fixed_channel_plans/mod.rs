@@ -1,6 +1,7 @@
 use super::*;
 use core::marker::PhantomData;
 use lorawan::maccommands::ChannelMask;
+use rtt_target::rprintln;
 
 mod join_channels;
 use join_channels::JoinChannels;
@@ -81,7 +82,10 @@ impl<const D: usize, F: FixedChannelRegion<D>> RegionHandler for FixedChannelPla
         self.join_channels.reset();
 
         if let Some(CfList::FixedChannel(channel_mask)) = join_accept.c_f_list() {
+            rprintln!("JoinAccept has CFList");
             self.channel_mask = channel_mask;
+        } else {
+            rprintln!("JoinAccept has no CFList");
         }
     }
 
