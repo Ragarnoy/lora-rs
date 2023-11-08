@@ -157,7 +157,7 @@ impl<const D: usize, F: FixedChannelRegion<D>> RegionHandler for FixedChannelPla
                     self.last_tx_channel = channel;
                     (datarate, F::uplink_channels()[(64 + channel) as usize])
                 } else {
-                    let mut channel = (rng.next_u32() & 0b111111) as u8;
+                    let mut channel = 7 + (rng.next_u32() & 0b111) as u8;
                     // keep selecting a random channel until we find one that is enabled
                     while !self.channel_mask.is_enabled(channel.into()).unwrap() {
                         channel = (rng.next_u32() & 0b111111) as u8;
